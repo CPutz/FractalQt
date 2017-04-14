@@ -140,7 +140,7 @@ void ColorSpectrumChannelPicker::paintEvent(QPaintEvent *) {
     //boxes
     for (int i = 0; i < (*this->positions).length(); i++) {
         int x = this->width() * (*this->positions)[i];
-        int y = this->height() * (1 - getChannelValue((*this->spectrum)[i]));
+        int y = this->height() * (255 - getChannelValue((*this->spectrum)[i])) / 256;
 
         painter.drawRect(x - 3, y - 3, 6, 6);
     }
@@ -148,7 +148,7 @@ void ColorSpectrumChannelPicker::paintEvent(QPaintEvent *) {
     //current box
     if (&this->currentColor != NULL) {
         int x = this->width() * *this->currentPosition;
-        int y = this->height() * (1 - getChannelValue(*this->currentColor));
+        int y = this->height() * (255 - getChannelValue(*this->currentColor)) / 256;
 
         painter.drawRect(x - 3, y - 3, 6, 6);
     }
@@ -156,16 +156,16 @@ void ColorSpectrumChannelPicker::paintEvent(QPaintEvent *) {
 
 
 
-float ColorSpectrumChannelPicker::getChannelValue(QColor color) {
+int ColorSpectrumChannelPicker::getChannelValue(QColor color) {
     switch (this->channel) {
         case ChannelRed:
-            return color.redF();
+            return color.red();
             break;
         case ChannelGreen:
-            return color.greenF();
+            return color.green();
             break;
         case ChannelBlue:
-            return color.blueF();
+            return color.blue();
             break;
     }
 }

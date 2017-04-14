@@ -31,7 +31,7 @@ private:
     Channel channel;
     bool rightPressed;
 
-    float getChannelValue(QColor);
+    int getChannelValue(QColor);
     QColor changeChannel(QColor, float);
     void updateCurrent(QMouseEvent *);
 
