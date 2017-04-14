@@ -31,7 +31,6 @@ private:
     void createBuffer();
     void createTexture();
     void updateMomevent();
-    void drawText(int x, int y, std::string s);
     void updateStatusBar();
 
     void keyPressEvent(QKeyEvent *event);

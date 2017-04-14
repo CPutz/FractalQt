@@ -142,14 +142,9 @@ void GLWidget::paintGL() {
 
     glEnd();
 
-
-
     glBindBuffer( GL_PIXEL_UNPACK_BUFFER, 0 );
     glBindTexture( GL_TEXTURE_2D, 0 );
     glDisable( GL_TEXTURE_2D );
-
-
-
 
     glMatrixMode(GL_PROJECTION);
     glPopMatrix();
@@ -158,14 +153,6 @@ void GLWidget::paintGL() {
     frames++;
 
     updateStatusBar();
-}
-
-void GLWidget::drawText(int x, int y, std::string s) {
-    glRasterPos2i(x, y);
-    for( size_t i = 0; i < s.size(); ++i ) {
-        glutBitmapCharacter( GLUT_BITMAP_HELVETICA_18, s[i] );
-    }
-    //glutBitmapString(GLUT_BITMAP_HELVETICA_18, (const unsigned char*)s.c_str());
 }
 
 void GLWidget::updateFPS() {
