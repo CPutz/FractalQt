@@ -69,9 +69,11 @@ void MainWindow::onRenderTypeChanged()
 }
 
 void MainWindow::onScreenshot() {
-    QString fileName = QFileDialog::getSaveFileName(this, tr("Save Image"), "", tr("Image Files (*.png)"));
-    QFile f(fileName);
-    f.open(QIODevice::WriteOnly);
-    ui->fractal->takeScreenShot(f.fileName().toStdString());
-    f.close();
+    //QString fileName = QFileDialog::getSaveFileName(this, tr("Save Image"), "", tr("Image Files (*.png)"));
+    //QFile f(fileName);
+    //f.open(QIODevice::WriteOnly);
+    //ui->fractal->takeScreenShot(f.fileName().toStdString());
+    //f.close();
+
+    ui->fractal->takeScreenShot("");
 }

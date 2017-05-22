@@ -6,6 +6,7 @@
 
 #include "cuda_runtime.h"
 #include "cuda_gl_interop.h"
+//#include "nvrtc.h"
 
 #include "cuda_helper.h"
 
@@ -510,4 +511,23 @@ void GLWidget::takeScreenShot(std::string fileName) {
     }
 
     delete imgData;*/
+
+    /*const char *saxpy = "                                           \n\
+    extern \"C\" __global__                                         \n\
+    void saxpy(float a, float *x, float *y, float *out, size_t n)   \n\
+    {                                                               \n\
+      size_t tid = blockIdx.x * blockDim.x + threadIdx.x;           \n\
+      if (tid < n) {                                                \n\
+        out[tid] = a * x[tid] + y[tid];                             \n\
+      }                                                             \n\
+    }                                                               \n";
+
+
+    nvrtcProgram prog;
+    nvrtcCreateProgram(&prog,         // prog
+                       saxpy,         // buffer
+                       "saxpy.cu",    // name
+                       0,             // numHeaders
+                       NULL,          // headers
+                       NULL);         // includeNames*/
 }

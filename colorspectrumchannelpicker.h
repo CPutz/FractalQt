@@ -18,13 +18,16 @@ public:
     explicit ColorSpectrumChannelPicker(QWidget *parent = 0);
     ~ColorSpectrumChannelPicker();
 
-    void init(QList<float>* positions, QList<QColor>* spectrum, float* currentPosition, QColor* currentColor);
+    void init(QList<float>* positions, QList<QColor>* spectrum, QList<float>* positionsDraw, QList<QColor>* spectrumDraw,
+              float* currentPosition, QColor* currentColor);
     void setChannel(Channel);
 
 private:
     Ui::ColorSpectrumChannelPicker *ui;
     QList<float>* positions;
     QList<QColor>* spectrum;
+    QList<float>* positionsDraw;
+    QList<QColor>* spectrumDraw;
 
     float* currentPosition;
     QColor* currentColor;

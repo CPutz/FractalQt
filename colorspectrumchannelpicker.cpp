@@ -22,9 +22,13 @@ ColorSpectrumChannelPicker::~ColorSpectrumChannelPicker()
     delete ui;
 }
 
-void ColorSpectrumChannelPicker::init(QList<float>* positions, QList<QColor>* spectrum, float* currentPosition, QColor* currentColor) {
+void ColorSpectrumChannelPicker::init(QList<float>* positions, QList<QColor>* spectrum,
+                                      QList<float>* positionsDraw, QList<QColor>* spectrumDraw,
+                                      float* currentPosition, QColor* currentColor) {
     this->positions = positions;
     this->spectrum = spectrum;
+    this->positionsDraw = positionsDraw;
+    this->spectrumDraw = spectrumDraw;
     this->currentPosition = currentPosition;
     this->currentColor = currentColor;
 }
@@ -105,24 +109,24 @@ void ColorSpectrumChannelPicker::paintEvent(QPaintEvent *) {
 
     float p;
     int i = 1;
-    QColor c1 = (*this->spectrum)[i-1];
-    QColor c2 = (*this->spectrum)[i];
-    float dist = (*this->positions)[i] - (*this->positions)[i-1];
+    QColor c1 = (*this->spectrumDraw)[i-1];
+    QColor c2 = (*this->spectrumDraw)[i];
+    float dist = (*this->positionsDraw)[i] - (*this->positionsDraw)[i-1];
 
     for (int x = 0; x < this->width(); x++) {
         //update color
         p = (float)x / this->width();
 
         if (p)
-        if (p >= (*this->positions)[i]) {
+        if (p >= (*this->positionsDraw)[i]) {
             i++;
-            dist = (*this->positions)[i] - (*this->positions)[i-1];
-            c1 = (*this->spectrum)[i-1];
-            c2 = (*this->spectrum)[i];
+            dist = (*this->positionsDraw)[i] - (*this->positionsDraw)[i-1];
+            c1 = (*this->spectrumDraw)[i-1];
+            c2 = (*this->spectrumDraw)[i];
         }
 
         //draw color
-        float f = (p - (*this->positions)[i-1]) / dist;
+        float f = (p - (*this->positionsDraw)[i-1]) / dist;
         int r = c1.red()   * (1 - f) + c2.red()   * f;
         int g = c1.green() * (1 - f) + c2.green() * f;
         int b = c1.blue()  * (1 - f) + c2.blue()  * f;

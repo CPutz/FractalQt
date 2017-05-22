@@ -23,6 +23,8 @@ private:
     QList<ColorSpectrumChannelPicker *> frames;
     QList<float> positions;
     QList<QColor> spectrum;
+    QList<float> positionsDraw;
+    QList<QColor> spectrumDraw;
     float currentPosition;
     QColor currentColor;
 
