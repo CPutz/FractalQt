@@ -30,6 +30,10 @@ private:
 
     void addColor(float position, QColor color);
     void transferColorSpectrum();
+    std::tuple<float, float> ColorSpectrumPicker::catmullSegment(float t0, float t1, float t2, float t3,
+                                                                 float x0, float x1, float x2, float x3,
+                                                                 float y0, float y1, float y2, float y3,
+                                                                 float t);
 
 signals:
     void colorSpectrumChanged(QList<float>, QList<QColor>);

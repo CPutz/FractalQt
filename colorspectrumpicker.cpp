@@ -94,7 +94,7 @@ void ColorSpectrumPicker::transferColorSpectrum() {
         float x0 = this->positions[i-1]; float r0 = this->spectrum[i-1].redF(); float g0 = this->spectrum[i-1].greenF(); float b0 = this->spectrum[i-1].blueF();
         float x1 = this->positions[i];   float r1 = this->spectrum[i].redF();   float g1 = this->spectrum[i].greenF();   float b1 = this->spectrum[i].blueF();
         float x2 = this->positions[i+1]; float r2 = this->spectrum[i+1].redF(); float g2 = this->spectrum[i+1].greenF(); float b2 = this->spectrum[i+1].blueF();
-        float x3 = this->positions[i+2]; float r3 = this->spectrum[i+2].redF(); float g2 = this->spectrum[i+2].greenF(); float b3 = this->spectrum[i+2].blueF();
+        float x3 = this->positions[i+2]; float r3 = this->spectrum[i+2].redF(); float g3 = this->spectrum[i+2].greenF(); float b3 = this->spectrum[i+2].blueF();
 
         float tr0 = 0;
         float tr1 = sqrt((x1-x0)*(x1-x0) + (r1-r0)*(r1-r0)) + tr0;
@@ -116,17 +116,21 @@ void ColorSpectrumPicker::transferColorSpectrum() {
 
         int res = 10;
         for (int j = 1; j <= res - 1; j++) {
-            float t = t1 + j * (t2-t1)/res;
-            float x = x0 + j * (x2-x1)/res;
+            float tr = tr1 + j * (tr2-tr1)/res;
+            float tg = tg1 + j * (tg2-tg1)/res;
+            float tb = tb1 + j * (tb2-tb1)/res;
+            float x = x1 + j * (x2-x1)/res;
 
-            float Cr = catmullSegment(tr0, tr1, tr2, tr3, x0, x1, x2, x3, r0, r1, r2, r3);
-            float Cg = catmullSegment(tg0, tg1, tg2, tg3, x0, x1, x2, x3, g0, g1, g2, g3);
-            float Cb = catmullSegment(tb0, tb1, tb2, tb3, x0, x1, x2, x3, b0, b1, b2, b3);
+            std::tuple<float, float> Cr = catmullSegment(tr0, tr1, tr2, tr3, x0, x1, x2, x3, r0, r1, r2, r3, tr);
+            std::tuple<float, float> Cg = catmullSegment(tg0, tg1, tg2, tg3, x0, x1, x2, x3, g0, g1, g2, g3, tg);
+            std::tuple<float, float> Cb = catmullSegment(tb0, tb1, tb2, tb3, x0, x1, x2, x3, b0, b1, b2, b3, tb);
 
-            int r = (int)(255 * Cy);
+            int r = (int)(255 * std::get<1>(Cr));
+            int g = (int)(255 * std::get<1>(Cg));
+            int b = (int)(255 * std::get<1>(Cb));
 
-            this->positionsDraw.append(Cx);
-            this->spectrumDraw.append(QColor(r, 0, 0));
+            this->positionsDraw.append(x);
+            this->spectrumDraw.append(QColor(r, g, b));
         }
     }
 
@@ -162,9 +166,10 @@ void ColorSpectrumPicker::transferColorSpectrum() {
 }
 
 
-std::tuple<float, float> catmullSegment(float t0, float t1, float t2, float t3,
-                                        float x0, float x1, float x2, float x3,
-                                        float y0, float y1, float y2, float y3) {
+std::tuple<float, float> ColorSpectrumPicker::catmullSegment(float t0, float t1, float t2, float t3,
+                                                             float x0, float x1, float x2, float x3,
+                                                             float y0, float y1, float y2, float y3,
+                                                             float t) {
     float A1x = (t1-t)/(t1-t0)*x0  + (t-t0)/(t1-t0)*x1;
     float A2x = (t2-t)/(t2-t1)*x1  + (t-t1)/(t2-t1)*x2;
     float A3x = (t3-t)/(t3-t2)*x2  + (t-t2)/(t3-t2)*x3;
