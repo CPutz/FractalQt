@@ -9,6 +9,8 @@
 #include <QImage>
 #include <QRgb>
 
+#include <iostream>
+using namespace std;
 
 ColorSpectrumChannelPicker::ColorSpectrumChannelPicker(QWidget *parent) :
     QWidget(parent),
@@ -37,7 +39,7 @@ void ColorSpectrumChannelPicker::init(QList<float>* positions, QList<QColor>* sp
 void ColorSpectrumChannelPicker::mousePressEvent(QMouseEvent *event) {
     bool collision = false;
     int index = -1;
-    this->rightPressed = event->buttons() == Qt::RightButton && this->positions->length() > 2;
+    this->rightPressed = event->buttons() == Qt::RightButton && this->positions->length() > 1;
 
     for (int i = 0; i < this->positions->length(); i++) {
         int x = this->width() * (*this->positions)[i];
@@ -83,12 +85,17 @@ void ColorSpectrumChannelPicker::mouseReleaseEvent(QMouseEvent *event) {
         updateCurrent(event);
 
         int n = (*this->positions).length();
-        for (int i = 0; i <= n; i++) {
+        int i;
+        for (i = 0; i < n; i++) {
             if ((*this->positions)[i] >= *this->currentPosition) {
                 (*this->positions).insert(i, *this->currentPosition);
                 (*this->spectrum).insert(i, *this->currentColor);
                 break;
             }
+        }
+        if (i == n) {
+            (*this->positions).append(*this->currentPosition);
+            (*this->spectrum).append(*this->currentColor);
         }
     }
 
@@ -117,19 +124,27 @@ void ColorSpectrumChannelPicker::paintEvent(QPaintEvent *) {
         //update color
         p = (float)x / this->width();
 
-        if (p)
-        if (p >= (*this->positionsDraw)[i]) {
+        int n = this->positionsDraw->size();
+
+        if (i < n && p >= (*this->positionsDraw)[i]) {
             i++;
-            dist = (*this->positionsDraw)[i] - (*this->positionsDraw)[i-1];
-            c1 = (*this->spectrumDraw)[i-1];
-            c2 = (*this->spectrumDraw)[i];
+            if (i == n) {
+                dist = (*this->positionsDraw)[0] - (*this->positionsDraw)[i-1] + 1;
+                c1 = (*this->spectrumDraw)[i-1];
+                c2 = (*this->spectrumDraw)[0];
+            }
+            else if (i < n) {
+                dist = (*this->positionsDraw)[i] - (*this->positionsDraw)[i-1];
+                c1 = (*this->spectrumDraw)[i-1];
+                c2 = (*this->spectrumDraw)[i];
+            }
         }
 
         //draw color
         float f = (p - (*this->positionsDraw)[i-1]) / dist;
-        int r = c1.red()   * (1 - f) + c2.red()   * f;
-        int g = c1.green() * (1 - f) + c2.green() * f;
-        int b = c1.blue()  * (1 - f) + c2.blue()  * f;
+        int r = trunc(c1.red()   * (1 - f) + c2.red()   * f, 0, 255);
+        int g = trunc(c1.green() * (1 - f) + c2.green() * f, 0, 255);
+        int b = trunc(c1.blue()  * (1 - f) + c2.blue()  * f, 0, 255);
         QColor drawColor = QColor(r, g, b);
 
         painter.setPen(drawColor);
@@ -189,18 +204,6 @@ QColor ColorSpectrumChannelPicker::changeChannel(QColor color, float f) {
 
     return color;
 }
-
-/*void ColorSpectrumChannelPicker::setColorSpectrum(QList<float> ps, QList<QColor> s) {
-    *this->positions = ps;
-    *this->spectrum = s;
-    this->update();
-}
-
-void ColorSpectrumChannelPicker::setCurrent(float pos, QColor color) {
-    *this->currentPosition = pos;
-    *this->currentColor = color;
-    update();
-}*/
 
 void ColorSpectrumChannelPicker::setChannel(Channel channel) {
     this->channel = channel;

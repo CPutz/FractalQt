@@ -37,7 +37,7 @@ MainWindow::MainWindow(QWidget *parent) :
 
     //color spectrum
     connect(ui->colorSpectrumPickerWidget, SIGNAL(colorSpectrumChanged(QList<QColor>)), ui->fractal, SLOT(setColorSpectrum(QList<QColor>)));
-    connect(ui->fractal, SIGNAL(colorSpectrumChanged(QList<float>, QList<QColor>)), ui->colorSpectrumPickerWidget, SLOT(setColorSpectrum(QList<float>, QList<QColor>)));
+    connect(ui->fractal, SIGNAL(wantColorSpectrum()), ui->colorSpectrumPickerWidget, SLOT(colorSpectrumUpdated()));
 
     //rendertype
     connect(ui->escapeRadioButton , SIGNAL(clicked()), this, SLOT(onRenderTypeChanged()));

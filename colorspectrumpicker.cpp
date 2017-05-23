@@ -5,6 +5,7 @@
 #include <QColorDialog>
 #include <QMouseEvent>
 
+
 ColorSpectrumPicker::ColorSpectrumPicker(QWidget *parent) :
     QWidget(parent),
     ui(new Ui::ColorSpectrumPicker)
@@ -31,27 +32,23 @@ ColorSpectrumPicker::ColorSpectrumPicker(QWidget *parent) :
     connect(ui->pickerGreen, SIGNAL(colorSpectrumChanged()), this, SLOT(colorSpectrumUpdated()));
     connect(ui->pickerBlue,  SIGNAL(colorSpectrumChanged()), this, SLOT(colorSpectrumUpdated()));
 
-    /*connect(this, SIGNAL(colorSpectrumChanged(QList<QColor>)), ui->pickerRed,   SLOT(update()));
-    connect(this, SIGNAL(colorSpectrumChanged(QList<QColor>)), ui->pickerGreen, SLOT(update()));
-    connect(this, SIGNAL(colorSpectrumChanged(QList<QColor>)), ui->pickerBlue,  SLOT(update()));
-
-    connect(this, SIGNAL(colorSpectrumChanged(QList<float>,QList<QColor>)), ui->pickerRed,   SLOT(update()));
-    connect(this, SIGNAL(colorSpectrumChanged(QList<float>,QList<QColor>)), ui->pickerGreen, SLOT(update()));
-    connect(this, SIGNAL(colorSpectrumChanged(QList<float>,QList<QColor>)), ui->pickerBlue,  SLOT(update()));*/
-
     QList<float> positions;
     positions.append(0);
-    positions.append(1);
+    positions.append(0.25);
+    positions.append(0.5);
+    positions.append(0.75);
 
     QList<QColor> colors;
+    colors.append(QColor(0, 150, 200));
     colors.append(QColor(255, 255, 255));
-    colors.append(QColor(0, 0, 0));
-
-    setColorSpectrum(positions, colors);
+    colors.append(QColor(255, 180,   0));
+    colors.append(QColor(0,   0,   0));
 
     ui->pickerRed  ->init(&this->positions, &this->spectrum, &this->positionsDraw, &this->spectrumDraw, &this->currentPosition, &this->currentColor);
     ui->pickerGreen->init(&this->positions, &this->spectrum, &this->positionsDraw, &this->spectrumDraw, &this->currentPosition, &this->currentColor);
     ui->pickerBlue ->init(&this->positions, &this->spectrum, &this->positionsDraw, &this->spectrumDraw, &this->currentPosition, &this->currentColor);
+
+    setColorSpectrum(positions, colors);
 }
 
 ColorSpectrumPicker::~ColorSpectrumPicker()
@@ -81,20 +78,30 @@ void ColorSpectrumPicker::colorSpectrumUpdated() {
 }
 
 void ColorSpectrumPicker::transferColorSpectrum() {
-    //this->spectrumDraw = this->spectrum;
-    //this->positionsDraw = this->positions;
-
     this->positionsDraw = QList<float>();
     this->spectrumDraw  = QList<QColor>();
 
-    this->positionsDraw.append(this->positions[0]);
-    this->spectrumDraw.append(this->spectrum[0]);
+    int n = this->spectrum.size();
 
-    for (int i = 1; i < this->spectrum.size() - 2; i++) {
-        float x0 = this->positions[i-1]; float r0 = this->spectrum[i-1].redF(); float g0 = this->spectrum[i-1].greenF(); float b0 = this->spectrum[i-1].blueF();
-        float x1 = this->positions[i];   float r1 = this->spectrum[i].redF();   float g1 = this->spectrum[i].greenF();   float b1 = this->spectrum[i].blueF();
-        float x2 = this->positions[i+1]; float r2 = this->spectrum[i+1].redF(); float g2 = this->spectrum[i+1].greenF(); float b2 = this->spectrum[i+1].blueF();
-        float x3 = this->positions[i+2]; float r3 = this->spectrum[i+2].redF(); float g3 = this->spectrum[i+2].greenF(); float b3 = this->spectrum[i+2].blueF();
+    for (int i = 0; i < n; i++) {
+        int k = (i-1)%n;
+        if (k == -1)
+            k += n;
+        float x0 = this->positions[k];       float r0 = this->spectrum[k].redF();       float g0 = this->spectrum[k].greenF();       float b0 = this->spectrum[k].blueF();
+        float x1 = this->positions[i%n];     float r1 = this->spectrum[i%n].redF();     float g1 = this->spectrum[i%n].greenF();     float b1 = this->spectrum[i%n].blueF();
+        float x2 = this->positions[(i+1)%n]; float r2 = this->spectrum[(i+1)%n].redF(); float g2 = this->spectrum[(i+1)%n].greenF(); float b2 = this->spectrum[(i+1)%n].blueF();
+        float x3 = this->positions[(i+2)%n]; float r3 = this->spectrum[(i+2)%n].redF(); float g3 = this->spectrum[(i+2)%n].greenF(); float b3 = this->spectrum[(i+2)%n].blueF();
+
+        if (i == 0)
+            x0--;
+        else if (i-1 >= n)
+            x0++;
+        if (i >= n)
+            x1++;
+        if (i+1 >= n)
+            x2++;
+        if (i+2 >= n)
+            x3++;
 
         float tr0 = 0;
         float tr1 = sqrt((x1-x0)*(x1-x0) + (r1-r0)*(r1-r0)) + tr0;
@@ -125,21 +132,22 @@ void ColorSpectrumPicker::transferColorSpectrum() {
             std::tuple<float, float> Cg = catmullSegment(tg0, tg1, tg2, tg3, x0, x1, x2, x3, g0, g1, g2, g3, tg);
             std::tuple<float, float> Cb = catmullSegment(tb0, tb1, tb2, tb3, x0, x1, x2, x3, b0, b1, b2, b3, tb);
 
-            int r = (int)(255 * std::get<1>(Cr));
-            int g = (int)(255 * std::get<1>(Cg));
-            int b = (int)(255 * std::get<1>(Cb));
+            int r = truncRGB(255 * std::get<1>(Cr));
+            int g = truncRGB(255 * std::get<1>(Cg));
+            int b = truncRGB(255 * std::get<1>(Cb));
+
+            //float x = (std::get<0>(Cr) + std::get<0>(Cg) + std::get<0>(Cb)) / 3;
 
             this->positionsDraw.append(x);
             this->spectrumDraw.append(QColor(r, g, b));
         }
     }
 
-    this->positionsDraw.append(this->positions[this->positions.length()-1]);
-    this->spectrumDraw.append(this->spectrum[this->spectrum.length()-1]);
-
+    //this->positionsDraw.append(this->positions[this->positions.length()-1]);
+    //this->spectrumDraw.append(this->spectrum[this->spectrum.length()-1]);
 
     // Create gradient
-    int resolution = 100;
+    int resolution = 200;
     QLinearGradient gradient(0, 0, resolution, 0);
     for (int i = 0; i < this->spectrumDraw.size(); i++) {
         gradient.setColorAt(this->positionsDraw[i], this->spectrumDraw[i]);
@@ -184,4 +192,12 @@ std::tuple<float, float> ColorSpectrumPicker::catmullSegment(float t0, float t1,
     float Cy  = (t2-t)/(t2-t1)*B1y + (t-t1)/(t2-t1)*B2y;
 
     return std::make_tuple(Cx, Cy);
+}
+
+int ColorSpectrumPicker::truncRGB(int v) {
+    if (v <= 0)
+        return 0;
+    if (v >= 255)
+        return 255;
+    return v;
 }

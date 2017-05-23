@@ -75,7 +75,7 @@ signals:
     void variableYChanged(double);
     void zoomChanged(double);
     void iterationsChanged(int);
-    void colorSpectrumChanged(QList<float>, QList<QColor>);
+    void wantColorSpectrum();
 };
 
 #endif // GLWIDGET_H

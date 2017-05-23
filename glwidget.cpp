@@ -96,10 +96,11 @@ void GLWidget::initializeGL() {
     createBuffer();
     createTexture();
 
-    QList<QColor> colors;
-    colors.append(QColor(255, 255, 255));
-    colors.append(QColor(0, 0, 0));
-    setColorSpectrum(colors);
+    //QList<QColor> colors;
+    //colors.append(QColor(255, 255, 255));
+    //colors.append(QColor(0, 0, 0));
+    //setColorSpectrum(colors);
+    wantColorSpectrum();
 }
 
 void GLWidget::paintGL() {
