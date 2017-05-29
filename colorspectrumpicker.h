@@ -35,6 +35,7 @@ private:
                                                                  float y0, float y1, float y2, float y3,
                                                                  float t);
     int truncRGB(int);
+    int mod(int a, int n);
 
 signals:
     void colorSpectrumChanged(QList<QColor>);

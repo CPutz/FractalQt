@@ -125,34 +125,35 @@ __global__ void computeEscape(GLubyte* data, const int imgWidth, const int imgHe
             ++k;
         }
 
-        float hue;
+        int j = 4 * i;
 
         if (k == iterations) {
-            hue = 1.0;
+            data[j] = 0;
+            data[j + 1] = 0;
+            data[j + 2] = 0;
+            data[j + 3] = 255;
         } else {
-            hue = (0.025f * e - (int)(0.025f * e));
+            float hue = (0.025f * e - (int)(0.025f * e));
+            int n = (int)(hue * (colorSpectrumSize - 1));
+            float h = hue * (colorSpectrumSize - 1) - n;
+
+            GLubyte r1 = colorSpectrum[3 * n];
+            GLubyte g1 = colorSpectrum[3 * n + 1];
+            GLubyte b1 = colorSpectrum[3 * n + 2];
+            GLubyte r2 = colorSpectrum[3 * n + 3];
+            GLubyte g2 = colorSpectrum[3 * n + 4];
+            GLubyte b2 = colorSpectrum[3 * n + 5];
+
+            GLubyte R, G, B;
+            R = r1 * (1 - h) + r2 * h;
+            G = g1 * (1 - h) + g2 * h;
+            B = b1 * (1 - h) + b2 * h;
+
+            data[j] = R;
+            data[j + 1] = G;
+            data[j + 2] = B;
+            data[j + 3] = 255;
         }
-
-        int n = (int)(hue * (colorSpectrumSize - 1));
-        float h = hue * (colorSpectrumSize - 1) - n;
-
-        GLubyte r1 = colorSpectrum[3 * n];
-        GLubyte g1 = colorSpectrum[3 * n + 1];
-        GLubyte b1 = colorSpectrum[3 * n + 2];
-        GLubyte r2 = colorSpectrum[3 * n + 3];
-        GLubyte g2 = colorSpectrum[3 * n + 4];
-        GLubyte b2 = colorSpectrum[3 * n + 5];
-
-        GLubyte R, G, B;
-        R = r1 * (1 - h) + r2 * h;
-        G = g1 * (1 - h) + g2 * h;
-        B = b1 * (1 - h) + b2 * h;
-
-        int j = 4 * i;
-        data[j] = R;
-        data[j + 1] = G;
-        data[j + 2] = B;
-        data[j + 3] = 255;
     }
 }
 

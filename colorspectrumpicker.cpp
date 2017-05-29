@@ -83,16 +83,23 @@ void ColorSpectrumPicker::transferColorSpectrum() {
 
     int n = this->spectrum.size();
 
-    for (int i = 0; i < n; i++) {
-        int k = (i-1)%n;
-        if (k == -1)
-            k += n;
-        float x0 = this->positions[k];       float r0 = this->spectrum[k].redF();       float g0 = this->spectrum[k].greenF();       float b0 = this->spectrum[k].blueF();
-        float x1 = this->positions[i%n];     float r1 = this->spectrum[i%n].redF();     float g1 = this->spectrum[i%n].greenF();     float b1 = this->spectrum[i%n].blueF();
-        float x2 = this->positions[(i+1)%n]; float r2 = this->spectrum[(i+1)%n].redF(); float g2 = this->spectrum[(i+1)%n].greenF(); float b2 = this->spectrum[(i+1)%n].blueF();
-        float x3 = this->positions[(i+2)%n]; float r3 = this->spectrum[(i+2)%n].redF(); float g3 = this->spectrum[(i+2)%n].greenF(); float b3 = this->spectrum[(i+2)%n].blueF();
+    for (int i = -1; i < n; i++) {
+        int i0 = mod(i-1, n);
+        int i1 = mod(i,   n);
+        int i2 = mod(i+1, n);
+        int i3 = mod(i+2, n);
 
-        if (i == 0)
+        float r0 = this->spectrum[i0].redF(); float g0 = this->spectrum[i0].greenF(); float b0 = this->spectrum[i0].blueF();
+        float r1 = this->spectrum[i1].redF(); float g1 = this->spectrum[i1].greenF(); float b1 = this->spectrum[i1].blueF();
+        float r2 = this->spectrum[i2].redF(); float g2 = this->spectrum[i2].greenF(); float b2 = this->spectrum[i2].blueF();
+        float r3 = this->spectrum[i3].redF(); float g3 = this->spectrum[i3].greenF(); float b3 = this->spectrum[i3].blueF();
+
+        float x0 = this->positions[i0] + (float)(i-1 - i0) / n;
+        float x1 = this->positions[i1] + (float)(i   - i1) / n;
+        float x2 = this->positions[i2] + (float)(i+1 - i2) / n;
+        float x3 = this->positions[i3] + (float)(i+2 - i3) / n;
+
+        /*if (i == 0)
             x0--;
         else if (i-1 >= n)
             x0++;
@@ -101,7 +108,7 @@ void ColorSpectrumPicker::transferColorSpectrum() {
         if (i+1 >= n)
             x2++;
         if (i+2 >= n)
-            x3++;
+            x3++;*/
 
         float tr0 = 0;
         float tr1 = sqrt((x1-x0)*(x1-x0) + (r1-r0)*(r1-r0)) + tr0;
@@ -118,10 +125,12 @@ void ColorSpectrumPicker::transferColorSpectrum() {
         float tb2 = sqrt((x2-x1)*(x2-x1) + (b2-b1)*(b2-b1)) + tb1;
         float tb3 = sqrt((x3-x2)*(x3-x2) + (b3-b2)*(b3-b2)) + tb2;
 
-        this->positionsDraw.append(x1);
-        this->spectrumDraw.append(QColor(this->spectrum[i]));
+        if (0 <= x1 && x1 <= 1) {
+            this->positionsDraw.append(x1);
+            this->spectrumDraw.append(QColor(this->spectrum[i]));
+        }
 
-        int res = 10;
+        int res = 5;
         for (int j = 1; j <= res - 1; j++) {
             float tr = tr1 + j * (tr2-tr1)/res;
             float tg = tg1 + j * (tg2-tg1)/res;
@@ -138,10 +147,15 @@ void ColorSpectrumPicker::transferColorSpectrum() {
 
             //float x = (std::get<0>(Cr) + std::get<0>(Cg) + std::get<0>(Cb)) / 3;
 
-            this->positionsDraw.append(x);
-            this->spectrumDraw.append(QColor(r, g, b));
+            if (0 < x && x < 1) {
+                this->positionsDraw.append(x);
+                this->spectrumDraw.append(QColor(r, g, b));
+            }
         }
     }
+
+    this->positionsDraw.append(1);
+    this->spectrumDraw.append(QColor(this->spectrum[0]));
 
     //this->positionsDraw.append(this->positions[this->positions.length()-1]);
     //this->spectrumDraw.append(this->spectrum[this->spectrum.length()-1]);
@@ -169,8 +183,18 @@ void ColorSpectrumPicker::transferColorSpectrum() {
         QRgb rgb = image->pixel(x,0);
         spectrum.append(QColor(rgb));
     }
+    QRgb rgb = image->pixel(0,0);
+    spectrum.append(QColor(rgb));
 
     colorSpectrumChanged(spectrum);
+}
+
+
+int ColorSpectrumPicker::mod(int a, int n) {
+    int b = a % n;
+    if (b < 0)
+        return b + n;
+    return b;
 }
 
 
