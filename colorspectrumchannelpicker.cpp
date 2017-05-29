@@ -150,7 +150,17 @@ void ColorSpectrumChannelPicker::paintEvent(QPaintEvent *) {
         painter.setPen(drawColor);
         painter.drawLine(x, 0, x, this->height());
 
-        painter.setPen(QColor(200, 200, 200));
+        switch (this->channel) {
+            case ChannelRed:
+                painter.setPen(QColor(255, 0, 0));
+                break;
+            case ChannelGreen:
+                painter.setPen(QColor(0, 255, 0));
+                break;
+            case ChannelBlue:
+                painter.setPen(QColor(0, 0, 255));
+                break;
+        }
         int y = getChannelValue(drawColor);
         painter.drawPoint(x, this->height() * (255 - y) / 256);
     }
