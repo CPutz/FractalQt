@@ -5,6 +5,8 @@
 
 #include "fractal.h"
 
+#define PI 3.1415926535
+
 extern "C"
 void compute(GLubyte* data, const int width, const int height, const int iterations,
              const double midx, const double midy, const double scale,
@@ -162,7 +164,7 @@ __global__ void computeEscape(GLubyte* data, const int imgWidth, const int imgHe
     }
 }
 
-__global__ void computeNewton(GLubyte* data, const int imgWidth, const int imgHeight, const int iterations,
+/*__global__ void computeNewton(GLubyte* data, const int imgWidth, const int imgHeight, const int iterations,
                               const double midx, const double midy, const double scale,
                               const double varx, const double vary, const bool julia,
                               GLubyte* colorSpectrum, const int colorSpectrumSize)
@@ -214,8 +216,6 @@ __global__ void computeNewton(GLubyte* data, const int imgWidth, const int imgHe
 
         int k = 0;
 
-        //fractal formulas
-        //http://www.lifesmith.com/formulas.html
         while (l1 > epsilon && l2 > epsilon && l3 > epsilon && k < iterations) {
 
             //f(z) = z - (1+c)p(z) / p'(z)
@@ -282,8 +282,141 @@ __global__ void computeNewton(GLubyte* data, const int imgWidth, const int imgHe
             data[j + 3] = 255;
         }
     }
-}
+}*/
 
+
+__global__ void computeNewton(GLubyte* data, const int imgWidth, const int imgHeight, const int iterations,
+                              const double midx, const double midy, const double scale,
+                              const double varx, const double vary, const bool julia,
+                              GLubyte* colorSpectrum, const int colorSpectrumSize)
+{
+    int index_x = blockIdx.x * blockDim.x + threadIdx.x;
+    int index_y = blockIdx.y * blockDim.y + threadIdx.y;
+    int i = index_y * imgWidth + index_x;
+
+
+    double ax, ay;
+    if (imgWidth > imgHeight) {
+        ax = (double)imgWidth / imgHeight;
+        ay = 1.0f;
+    } else {
+        ax = 1.0f;
+        ay = (double)imgHeight / imgWidth;
+    }
+
+    if (index_x < imgWidth && index_y < imgHeight) {
+        double a, b, x, y, asq, bsq, epsilon, e, atemp, a1, b1, l;
+
+        a = midx + 2.0 * ax * scale * (double)(2.0 * index_x - imgWidth) / imgWidth;
+        b = midy + 2.0 * ay * scale * (double)(2.0 * index_y - imgHeight) / imgHeight;
+
+        if (julia) {
+            x = varx;
+            y = vary;
+        } else {
+            x = a + varx;
+            y = b + vary;
+        }
+
+        asq = a * a;
+        bsq = b * b;
+        e = 0;
+
+        epsilon = 1E-5;
+        l = 1;
+
+        int k = 0;
+
+        while (l > epsilon && k < iterations) {
+            //old values
+            a1 = a;
+            b1 = b;
+
+            //f(z) = z - (1+c)p(z) / p'(z)
+            //p(z) = z^3 - 1
+            //double u1 = a * asq - 3 * a * bsq - 1;
+            //double v1 = 3 * asq * b - bsq * b;
+            //double u2 = asq - bsq;
+            //double v2 = 2 * a * b;
+            //double m = 3 * (u2 * u2 + v2 * v2);
+            //double u3 = (u1 * u2 + v1 * v2) / m;
+            //double v3 = (u2 * v1 - u1 * v2) / m;
+            //atemp = a - (1+x)*u3 + y*v3;
+            //b = b - (1+x)*v3 - y*u3;
+            //a = atemp;
+
+            //f(z) = z - (1+c)p(z) / p'(z)
+            //p(z) = z^6 + z^3 - 1
+            double u1 = asq*asq*asq - 15*asq*asq*bsq + 15*asq*bsq*bsq - bsq*bsq*bsq + asq*a - 3*a*bsq - 1;
+            double v1 = 6*asq*asq*a*b - 20*asq*a*bsq*b + 6*a*bsq*bsq*b + 3*asq*b - bsq*b;
+            double u2 = 6*asq*asq*a - 60*asq*a*bsq + 30*a*bsq*bsq + 3*asq - 3*bsq;
+            double v2 = 30*asq*asq*b - 60*asq*bsq*b + 6*bsq*bsq*b + 6*a*b;
+            double m = u2 * u2 + v2 * v2;
+            double u3 = (u1 * u2 + v1 * v2) / m;
+            double v3 = (u2 * v1 - u1 * v2) / m;
+            atemp = a - (1+x)*u3 + y*v3;
+            b = b - (1+x)*v3 - y*u3;
+            a = atemp;
+
+            //f(z) = z^2 + c (mandelbrot)
+            //atemp = asq - bsq + x;
+            //b = a * b;
+            //b += b + y;
+            //a = atemp;
+
+            //f(z) = 1/z^2 + c
+            //double m = asq + bsq;
+            //m *= m;
+            //atemp = (asq - bsq) / m + x;
+            //b = -(2 * a * b) / m + y;
+            //a = atemp;
+
+
+            l = (a-a1)*(a-a1)+(b-b1)*(b-b1);
+
+            e += expf(-1/l);
+
+            asq = a * a;
+            bsq = b * b;
+            ++k;
+        }
+
+        int j = 4 * i;
+
+        if (k == iterations) {
+            data[j] = 0;
+            data[j + 1] = 0;
+            data[j + 2] = 0;
+            data[j + 3] = 255;
+        } else {
+            float hue = (0.025f * e - (int)(0.025f * e));
+
+            float f = atan(b/a) / PI + 0.5;
+            float huetemp = hue + f;
+            hue = huetemp - (int)huetemp;
+
+            int n = (int)(hue * (colorSpectrumSize - 1));
+            float h = hue * (colorSpectrumSize - 1) - n;
+
+            GLubyte r1 = colorSpectrum[3 * n];
+            GLubyte g1 = colorSpectrum[3 * n + 1];
+            GLubyte b1 = colorSpectrum[3 * n + 2];
+            GLubyte r2 = colorSpectrum[3 * n + 3];
+            GLubyte g2 = colorSpectrum[3 * n + 4];
+            GLubyte b2 = colorSpectrum[3 * n + 5];
+
+            GLubyte R, G, B;
+            R = r1 * (1 - h) + r2 * h;
+            G = g1 * (1 - h) + g2 * h;
+            B = b1 * (1 - h) + b2 * h;
+
+            data[j] = R;
+            data[j + 1] = G;
+            data[j + 2] = B;
+            data[j + 3] = 255;
+        }
+    }
+}
 
 
 
