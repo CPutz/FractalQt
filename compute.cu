@@ -182,7 +182,7 @@ __global__ void computeNewton(GLubyte* data, const int imgWidth, const int imgHe
     }
 
     if (index_x < imgWidth && index_y < imgHeight) {
-        double a, b, x, y, asq, bsq, rsq, e, atemp;
+        double a, b, x, y, asq, bsq, epsilon, e, atemp;
 
         a = midx + 2.0 * ax * scale * (double)(2.0 * index_x - imgWidth) / imgWidth;
         b = midy + 2.0 * ay * scale * (double)(2.0 * index_y - imgHeight) / imgHeight;
@@ -197,32 +197,50 @@ __global__ void computeNewton(GLubyte* data, const int imgWidth, const int imgHe
 
         asq = a * a;
         bsq = b * b;
-        rsq = 4;
         e = 0;
 
+        epsilon = 1E-10;
+        double r1 = 1;
+        double s1 = 0;
+        double r2 = -0.5;
+        double s2 = sqrtf(3) / 2;
+        double r3 = -0.5;
+        double s3 = -sqrtf(3) / 2;
+
+        double l1, l2, l3;
+        l1 = (a-r1)*(a-r1)+(b-s1)*(b-s1);
+        l2 = (a-r2)*(a-r2)+(b-s2)*(b-s2);
+        l3 = (a-r3)*(a-r3)+(b-s3)*(b-s3);
 
         int k = 0;
 
         //fractal formulas
         //http://www.lifesmith.com/formulas.html
-        while (asq + bsq < rsq && k < iterations) {
+        while (l1 > epsilon && l2 > epsilon && l3 > epsilon && k < iterations) {
 
-            //f(z) = z - p(z) / p'(z)
+            //f(z) = z - (1+c)p(z) / p'(z)
             //p(z) = z^3 - 1
             double u1 = a * asq - 3 * a * bsq - 1;
             double v1 = 3 * asq * b - bsq * b;
             double u2 = asq - bsq;
             double v2 = 2 * a * b;
             double m = 3 * (u2 * u2 + v2 * v2);
-            atemp = a - (u1 * u2 + v1 * v2) / m;
-            b = b - (u2 * v1 - u1 * v2) / m;
+            double u3 = (u1 * u2 + v1 * v2) / m;
+            double v3 = (u2 * v1 - u1 * v2) / m;
+
+            atemp = a - (1+x)*u3 + y*v3;
+            b = b - (1+x)*v3 - y*u3;
             a = atemp;
 
-            e += expf(-(asq + bsq)); //do not use sqrt as it does not add much
+            e += expf(-1/l1-1/l2-1/l3);
 
             asq = a * a;
             bsq = b * b;
             ++k;
+
+            l1 = (a-r1)*(a-r1)+(b-s1)*(b-s1);
+            l2 = (a-r2)*(a-r2)+(b-s2)*(b-s2);
+            l3 = (a-r3)*(a-r3)+(b-s3)*(b-s3);
         }
 
         int j = 4 * i;
@@ -234,6 +252,15 @@ __global__ void computeNewton(GLubyte* data, const int imgWidth, const int imgHe
             data[j + 3] = 255;
         } else {
             float hue = (0.025f * e - (int)(0.025f * e));
+
+            if ((a-r2)*(a-r2)+(b-s2)*(b-s2) < epsilon) {
+                double huetemp = hue + 1.0/3;
+                hue = huetemp - (int)huetemp;
+            } else if ((a-r3)*(a-r3)+(b-s3)*(b-s3) < epsilon) {
+                double huetemp = hue + 2.0/3;
+                hue = huetemp - (int)huetemp;
+            }
+
             int n = (int)(hue * (colorSpectrumSize - 1));
             float h = hue * (colorSpectrumSize - 1) - n;
 

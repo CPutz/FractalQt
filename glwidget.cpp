@@ -194,7 +194,7 @@ void GLWidget::updateMomevent()
         zoom -= zoomSpeed * dt;
     scale = pow(2, -zoom);
 
-    this->iterations = 128 * pow(8, zoom / 10);
+    //this->iterations = 128 * pow(8, zoom / 10);
 
 
     //signals
