@@ -194,6 +194,8 @@ void GLWidget::updateMomevent()
         zoom -= zoomSpeed * dt;
     scale = pow(2, -zoom);
 
+    this->iterations = 128 * pow(8, zoom / 10);
+
 
     //signals
     midPositionXChanged(this->midx);
@@ -201,6 +203,7 @@ void GLWidget::updateMomevent()
     variableXChanged(this->varx);
     variableYChanged(this->vary);
     zoomChanged(this->zoom);
+    iterationsChanged(this->iterations);
 
 
     checkCudaErrors(cudaGLMapBufferObject((void**)&fractalData, buffer ), __LINE__, false);

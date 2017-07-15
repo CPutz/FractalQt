@@ -56,11 +56,113 @@ __global__ void computeEscape(GLubyte* data, const int imgWidth, const int imgHe
         //http://www.lifesmith.com/formulas.html
         while (asq + bsq < rsq && k < iterations) {
 
-            //f(z) = z^2 + c (mandelbrot)
-            atemp = asq - bsq + x;
-            b = a * b;
-            b += b + y;
+            //f(z) = z - p(z) / p'(z)
+            //p(z) = z^3 - 1
+            double u1 = a * asq - 3 * a * bsq - 1;
+            double v1 = 3 * asq * b - bsq * b;
+            double u2 = asq - bsq;
+            double v2 = 2 * a * b;
+            double m = 3 * (u2 * u2 + v2 * v2);
+            atemp = a - (u1 * u2 + v1 * v2) / m;
+            b = b - (u2 * v1 - u1 * v2) / m;
             a = atemp;
+
+            e += expf(-(asq + bsq)); //do not use sqrt as it does not add much
+
+            asq = a * a;
+            bsq = b * b;
+            ++k;
+        }
+
+        int j = 4 * i;
+
+        if (k == iterations) {
+            data[j] = 0;
+            data[j + 1] = 0;
+            data[j + 2] = 0;
+            data[j + 3] = 255;
+        } else {
+            float hue = (0.025f * e - (int)(0.025f * e));
+            int n = (int)(hue * (colorSpectrumSize - 1));
+            float h = hue * (colorSpectrumSize - 1) - n;
+
+            GLubyte r1 = colorSpectrum[3 * n];
+            GLubyte g1 = colorSpectrum[3 * n + 1];
+            GLubyte b1 = colorSpectrum[3 * n + 2];
+            GLubyte r2 = colorSpectrum[3 * n + 3];
+            GLubyte g2 = colorSpectrum[3 * n + 4];
+            GLubyte b2 = colorSpectrum[3 * n + 5];
+
+            GLubyte R, G, B;
+            R = r1 * (1 - h) + r2 * h;
+            G = g1 * (1 - h) + g2 * h;
+            B = b1 * (1 - h) + b2 * h;
+
+            data[j] = R;
+            data[j + 1] = G;
+            data[j + 2] = B;
+            data[j + 3] = 255;
+        }
+    }
+}
+
+
+__global__ void computeNewton(GLubyte* data, const int imgWidth, const int imgHeight, const int iterations,
+                              const double midx, const double midy, const double scale,
+                              const double varx, const double vary, const bool julia,
+                              GLubyte* colorSpectrum, const int colorSpectrumSize)
+{
+    int index_x = blockIdx.x * blockDim.x + threadIdx.x;
+    int index_y = blockIdx.y * blockDim.y + threadIdx.y;
+    int i = index_y * imgWidth + index_x;
+
+
+    double ax, ay;
+    if (imgWidth > imgHeight) {
+        ax = (double)imgWidth / imgHeight;
+        ay = 1.0f;
+    } else {
+        ax = 1.0f;
+        ay = (double)imgHeight / imgWidth;
+    }
+
+    if (index_x < imgWidth && index_y < imgHeight) {
+        double a, b, x, y, asq, bsq, rsq, e, atemp;
+
+        a = midx + 2.0 * ax * scale * (double)(2.0 * index_x - imgWidth) / imgWidth;
+        b = midy + 2.0 * ay * scale * (double)(2.0 * index_y - imgHeight) / imgHeight;
+
+        if (julia) {
+            x = varx;
+            y = vary;
+        } else {
+            x = a + varx;
+            y = b + vary;
+        }
+
+        asq = a * a;
+        bsq = b * b;
+        rsq = 256;
+        e = 0;
+
+
+        int k = 0;
+
+        //fractal formulas
+        //http://www.lifesmith.com/formulas.html
+        while (asq + bsq < rsq && k < iterations) {
+
+            //f(z) = z^2 + c (mandelbrot)
+            //atemp = asq - bsq + x;
+            //b = a * b;
+            //b += b + y;
+            //a = atemp;
+
+            //f(z) = 1/z + c
+            //double m = asq + bsq;
+            //atemp = a / m + x;
+            //b = -b / m + y;
+            //a = atemp;
 
             //f(z) = z^2 + 1 / z + c + d
             //where d = e^(2pi/3*i) * 3 / 2^(2/3)
@@ -116,7 +218,6 @@ __global__ void computeEscape(GLubyte* data, const int imgWidth, const int imgHe
             //atemp = u + (u * x + v * y) / m;
             //b = v + (u * y - v * x) / m;
             //a = atemp;
-
 
             e += expf(-(asq + bsq)); //do not use sqrt as it does not add much
 
@@ -442,6 +543,9 @@ void compute(GLubyte* data, const int width, const int height, const int iterati
             break;
         case Average:
             computeAverage <<< gridSize, blockSize >>> (data, width, height, iterations, midx, midy, scale, varx, vary, julia, colorSpectrum, colorSpectrumSize);
+            break;
+        case Newton:
+            computeNewton <<< gridSize, blockSize >>> (data, width, height, iterations, midx, midy, scale, varx, vary, julia, colorSpectrum, colorSpectrumSize);
             break;
     }
 }

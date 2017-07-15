@@ -1,7 +1,7 @@
 /********************************************************************************
 ** Form generated from reading UI file 'colorspectrumpicker.ui'
 **
-** Created by: Qt User Interface Compiler version 5.6.2
+** Created by: Qt User Interface Compiler version 5.8.0
 **
 ** WARNING! All changes made in this file will be lost when recompiling UI file!
 ********************************************************************************/
@@ -64,7 +64,7 @@ public:
 
     void retranslateUi(QWidget *ColorSpectrumPicker)
     {
-        ColorSpectrumPicker->setWindowTitle(QApplication::translate("ColorSpectrumPicker", "Form", 0));
+        ColorSpectrumPicker->setWindowTitle(QApplication::translate("ColorSpectrumPicker", "Form", Q_NULLPTR));
     } // retranslateUi
 
 };

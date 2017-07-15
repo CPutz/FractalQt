@@ -44,6 +44,8 @@ ColorSpectrumPicker::ColorSpectrumPicker(QWidget *parent) :
     colors.append(QColor(255, 180,   0));
     colors.append(QColor(0,   0,   0));
 
+    this->currentPosition = -1;
+
     ui->pickerRed  ->init(&this->positions, &this->spectrum, &this->positionsDraw, &this->spectrumDraw, &this->currentPosition, &this->currentColor);
     ui->pickerGreen->init(&this->positions, &this->spectrum, &this->positionsDraw, &this->spectrumDraw, &this->currentPosition, &this->currentColor);
     ui->pickerBlue ->init(&this->positions, &this->spectrum, &this->positionsDraw, &this->spectrumDraw, &this->currentPosition, &this->currentColor);
@@ -81,7 +83,19 @@ void ColorSpectrumPicker::transferColorSpectrum() {
     this->positionsDraw = QList<float>();
     this->spectrumDraw  = QList<QColor>();
 
-    int n = this->spectrum.size();
+    QList<float> positionsCurrent = this->positions;
+    QList<QColor> spectrumCurrent = this->spectrum;
+
+    if (this->currentPosition != -1) {
+        int j = 0;
+        while (positionsCurrent[j] < this->currentPosition) j++;
+        if (positionsCurrent[j] != this->currentPosition) {
+            positionsCurrent.insert(j, this->currentPosition);
+            spectrumCurrent.insert(j, this->currentColor);
+        }
+    }
+
+    int n = spectrumCurrent.size();
 
     for (int i = -1; i < n; i++) {
         int i0 = mod(i-1, n);
@@ -89,26 +103,15 @@ void ColorSpectrumPicker::transferColorSpectrum() {
         int i2 = mod(i+1, n);
         int i3 = mod(i+2, n);
 
-        float r0 = this->spectrum[i0].redF(); float g0 = this->spectrum[i0].greenF(); float b0 = this->spectrum[i0].blueF();
-        float r1 = this->spectrum[i1].redF(); float g1 = this->spectrum[i1].greenF(); float b1 = this->spectrum[i1].blueF();
-        float r2 = this->spectrum[i2].redF(); float g2 = this->spectrum[i2].greenF(); float b2 = this->spectrum[i2].blueF();
-        float r3 = this->spectrum[i3].redF(); float g3 = this->spectrum[i3].greenF(); float b3 = this->spectrum[i3].blueF();
+        float r0 = spectrumCurrent[i0].redF(); float g0 = spectrumCurrent[i0].greenF(); float b0 = spectrumCurrent[i0].blueF();
+        float r1 = spectrumCurrent[i1].redF(); float g1 = spectrumCurrent[i1].greenF(); float b1 = spectrumCurrent[i1].blueF();
+        float r2 = spectrumCurrent[i2].redF(); float g2 = spectrumCurrent[i2].greenF(); float b2 = spectrumCurrent[i2].blueF();
+        float r3 = spectrumCurrent[i3].redF(); float g3 = spectrumCurrent[i3].greenF(); float b3 = spectrumCurrent[i3].blueF();
 
-        float x0 = this->positions[i0] + (float)(i-1 - i0) / n;
-        float x1 = this->positions[i1] + (float)(i   - i1) / n;
-        float x2 = this->positions[i2] + (float)(i+1 - i2) / n;
-        float x3 = this->positions[i3] + (float)(i+2 - i3) / n;
-
-        /*if (i == 0)
-            x0--;
-        else if (i-1 >= n)
-            x0++;
-        if (i >= n)
-            x1++;
-        if (i+1 >= n)
-            x2++;
-        if (i+2 >= n)
-            x3++;*/
+        float x0 = positionsCurrent[i0] + (float)(i-1 - i0) / n;
+        float x1 = positionsCurrent[i1] + (float)(i   - i1) / n;
+        float x2 = positionsCurrent[i2] + (float)(i+1 - i2) / n;
+        float x3 = positionsCurrent[i3] + (float)(i+2 - i3) / n;
 
         float tr0 = 0;
         float tr1 = sqrt((x1-x0)*(x1-x0) + (r1-r0)*(r1-r0)) + tr0;
@@ -127,7 +130,7 @@ void ColorSpectrumPicker::transferColorSpectrum() {
 
         if (0 <= x1 && x1 <= 1) {
             this->positionsDraw.append(x1);
-            this->spectrumDraw.append(QColor(this->spectrum[i]));
+            this->spectrumDraw.append(QColor(spectrumCurrent[i]));
         }
 
         int res = 5;
@@ -167,7 +170,7 @@ void ColorSpectrumPicker::transferColorSpectrum() {
         gradient.setColorAt(this->positionsDraw[i], this->spectrumDraw[i]);
     }
 
-    if (&this->currentColor != NULL) {
+    if (this->currentPosition != -1) {
         gradient.setColorAt(this->currentPosition, this->currentColor);
     }
 

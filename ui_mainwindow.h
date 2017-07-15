@@ -1,7 +1,7 @@
 /********************************************************************************
 ** Form generated from reading UI file 'mainwindow.ui'
 **
-** Created by: Qt User Interface Compiler version 5.6.2
+** Created by: Qt User Interface Compiler version 5.8.0
 **
 ** WARNING! All changes made in this file will be lost when recompiling UI file!
 ********************************************************************************/
@@ -71,6 +71,7 @@ public:
     QRadioButton *escapeRadioButton;
     QRadioButton *orbitRadioButton;
     QRadioButton *averageRadioButton;
+    QRadioButton *newtonRadioButton;
     QPushButton *screenshotButton;
     QSpacerItem *verticalSpacer;
     QMenuBar *menuBar;
@@ -309,22 +310,26 @@ public:
         sizePolicy4.setVerticalStretch(0);
         sizePolicy4.setHeightForWidth(renderTypeGroupBox->sizePolicy().hasHeightForWidth());
         renderTypeGroupBox->setSizePolicy(sizePolicy4);
-        renderTypeGroupBox->setMinimumSize(QSize(0, 75));
+        renderTypeGroupBox->setMinimumSize(QSize(0, 100));
         escapeRadioButton = new QRadioButton(renderTypeGroupBox);
         escapeRadioButton->setObjectName(QStringLiteral("escapeRadioButton"));
         escapeRadioButton->setEnabled(true);
-        escapeRadioButton->setGeometry(QRect(10, 15, 82, 17));
+        escapeRadioButton->setGeometry(QRect(10, 15, 61, 17));
         escapeRadioButton->setFocusPolicy(Qt::TabFocus);
         escapeRadioButton->setChecked(true);
         orbitRadioButton = new QRadioButton(renderTypeGroupBox);
         orbitRadioButton->setObjectName(QStringLiteral("orbitRadioButton"));
-        orbitRadioButton->setGeometry(QRect(10, 35, 82, 17));
+        orbitRadioButton->setGeometry(QRect(10, 35, 61, 17));
         orbitRadioButton->setFocusPolicy(Qt::TabFocus);
         orbitRadioButton->setChecked(false);
         averageRadioButton = new QRadioButton(renderTypeGroupBox);
         averageRadioButton->setObjectName(QStringLiteral("averageRadioButton"));
-        averageRadioButton->setGeometry(QRect(10, 55, 82, 17));
+        averageRadioButton->setGeometry(QRect(10, 55, 61, 17));
         averageRadioButton->setFocusPolicy(Qt::TabFocus);
+        newtonRadioButton = new QRadioButton(renderTypeGroupBox);
+        newtonRadioButton->setObjectName(QStringLiteral("newtonRadioButton"));
+        newtonRadioButton->setGeometry(QRect(10, 75, 61, 17));
+        newtonRadioButton->setFocusPolicy(Qt::TabFocus);
 
         verticalLayout->addWidget(renderTypeGroupBox);
 
@@ -333,7 +338,7 @@ public:
 
         verticalLayout->addWidget(screenshotButton);
 
-        verticalSpacer = new QSpacerItem(20, 40, QSizePolicy::Minimum, QSizePolicy::Expanding);
+        verticalSpacer = new QSpacerItem(20, 10, QSizePolicy::Minimum, QSizePolicy::Expanding);
 
         verticalLayout->addItem(verticalSpacer);
 
@@ -367,21 +372,22 @@ public:
 
     void retranslateUi(QMainWindow *MainWindow)
     {
-        MainWindow->setWindowTitle(QApplication::translate("MainWindow", "Fractal", 0));
-        actionExit->setText(QApplication::translate("MainWindow", "Exit", 0));
-        actionExit->setShortcut(QApplication::translate("MainWindow", "Ctrl+Q", 0));
-        positionLabel->setText(QApplication::translate("MainWindow", "Position", 0));
-        zoomLabel->setText(QApplication::translate("MainWindow", "Zoom", 0));
-        variableLabel->setText(QApplication::translate("MainWindow", "Variable", 0));
-        checkBox->setText(QApplication::translate("MainWindow", "Julia", 0));
-        label->setText(QApplication::translate("MainWindow", "Iterations", 0));
-        label_2->setText(QApplication::translate("MainWindow", "Multisampling", 0));
-        renderTypeGroupBox->setTitle(QApplication::translate("MainWindow", "Render Type", 0));
-        escapeRadioButton->setText(QApplication::translate("MainWindow", "Escape", 0));
-        orbitRadioButton->setText(QApplication::translate("MainWindow", "Orbit", 0));
-        averageRadioButton->setText(QApplication::translate("MainWindow", "Average", 0));
-        screenshotButton->setText(QApplication::translate("MainWindow", "Screenshot", 0));
-        menuFile->setTitle(QApplication::translate("MainWindow", "File", 0));
+        MainWindow->setWindowTitle(QApplication::translate("MainWindow", "Fractal", Q_NULLPTR));
+        actionExit->setText(QApplication::translate("MainWindow", "Exit", Q_NULLPTR));
+        actionExit->setShortcut(QApplication::translate("MainWindow", "Ctrl+Q", Q_NULLPTR));
+        positionLabel->setText(QApplication::translate("MainWindow", "Position", Q_NULLPTR));
+        zoomLabel->setText(QApplication::translate("MainWindow", "Zoom", Q_NULLPTR));
+        variableLabel->setText(QApplication::translate("MainWindow", "Variable", Q_NULLPTR));
+        checkBox->setText(QApplication::translate("MainWindow", "Julia", Q_NULLPTR));
+        label->setText(QApplication::translate("MainWindow", "Iterations", Q_NULLPTR));
+        label_2->setText(QApplication::translate("MainWindow", "Multisampling", Q_NULLPTR));
+        renderTypeGroupBox->setTitle(QApplication::translate("MainWindow", "Render Type", Q_NULLPTR));
+        escapeRadioButton->setText(QApplication::translate("MainWindow", "Escape", Q_NULLPTR));
+        orbitRadioButton->setText(QApplication::translate("MainWindow", "Orbit", Q_NULLPTR));
+        averageRadioButton->setText(QApplication::translate("MainWindow", "Average", Q_NULLPTR));
+        newtonRadioButton->setText(QApplication::translate("MainWindow", "Newton", Q_NULLPTR));
+        screenshotButton->setText(QApplication::translate("MainWindow", "Screenshot", Q_NULLPTR));
+        menuFile->setTitle(QApplication::translate("MainWindow", "File", Q_NULLPTR));
 #ifndef QT_NO_STATUSTIP
         statusBar->setStatusTip(QString());
 #endif // QT_NO_STATUSTIP

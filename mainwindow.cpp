@@ -43,6 +43,7 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(ui->escapeRadioButton , SIGNAL(clicked()), this, SLOT(onRenderTypeChanged()));
     connect(ui->orbitRadioButton  , SIGNAL(clicked()), this, SLOT(onRenderTypeChanged()));
     connect(ui->averageRadioButton, SIGNAL(clicked()), this, SLOT(onRenderTypeChanged()));
+    //connect(ui->, SIGNAL(clicked()), this, SLOT(onRenderTypeChanged()));
 
     //statusbar
     connect(ui->fractal, SIGNAL(sendStatusBarMessage(QString)), ui->statusBar, SLOT(showMessage(QString)));

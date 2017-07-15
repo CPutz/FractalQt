@@ -69,8 +69,9 @@ void ColorSpectrumChannelPicker::mousePressEvent(QMouseEvent *event) {
 
 
     if (this->rightPressed) {
-        *this->currentPosition = (*this->positions)[0];
-        *this->currentColor = (*this->spectrum)[0];
+        //*this->currentPosition = (*this->positions)[0];
+        //*this->currentColor = (*this->spectrum)[0];
+        *this->currentPosition = -1;
     }
 }
 
@@ -97,6 +98,8 @@ void ColorSpectrumChannelPicker::mouseReleaseEvent(QMouseEvent *event) {
             (*this->positions).append(*this->currentPosition);
             (*this->spectrum).append(*this->currentColor);
         }
+
+        *this->currentPosition = -1;
     }
 
     this->colorSpectrumChanged();
@@ -175,7 +178,7 @@ void ColorSpectrumChannelPicker::paintEvent(QPaintEvent *) {
     }
 
     //current box
-    if (&this->currentColor != NULL) {
+    if (*this->currentPosition != -1) {
         int x = this->width() * *this->currentPosition;
         int y = this->height() * (255 - getChannelValue(*this->currentColor)) / 256;
 

@@ -1,7 +1,7 @@
 #ifndef FRACTAL
 #define FRACTAL
 
-enum RenderType { Esc, Orbit, Average };
+enum RenderType { Esc, Orbit, Average, Newton };
 
 #endif // FRACTAL
 
