@@ -16,9 +16,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-//#include "lodepng.h"
-
-
 int imgWidth;
 int imgHeight;
 int imgSize;
