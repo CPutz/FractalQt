@@ -79,6 +79,8 @@ GLWidget::GLWidget(QWidget *parent) : QGLWidget(parent) {
     this->timerId = 0;
 
     this->errorString = "";
+
+    this->needsUpdate = true;
 }
 
 GLWidget::~GLWidget() { }
@@ -170,28 +172,48 @@ void GLWidget::updateMomevent()
     double dt = 0.001 * (double)(currentTime - lastTime);
 
 
-    if (pressed_W)
+    if (pressed_W) {
         midy += moveSpeed * dt * scale;
-    if (pressed_S)
+        this->needsUpdate = true;
+    }
+    if (pressed_S) {
         midy -= moveSpeed * dt * scale;
-    if (pressed_D)
+        this->needsUpdate = true;
+    }
+    if (pressed_D) {
         midx += moveSpeed * dt * scale;
-    if (pressed_A)
+        this->needsUpdate = true;
+    }
+    if (pressed_A) {
         midx -= moveSpeed * dt * scale;
+        this->needsUpdate = true;
+    }
 
-    if (pressed_I)
+    if (pressed_I) {
         vary += 0.01 * moveSpeed * dt * scale;
-    if (pressed_K)
+        this->needsUpdate = true;
+    }
+    if (pressed_K) {
         vary -= 0.01 * moveSpeed * dt * scale;
-    if (pressed_J)
+        this->needsUpdate = true;
+    }
+    if (pressed_J) {
         varx += 0.01 * moveSpeed * dt * scale;
-    if (pressed_L)
+        this->needsUpdate = true;
+    }
+    if (pressed_L) {
         varx -= 0.01 * moveSpeed * dt * scale;
+        this->needsUpdate = true;
+    }
 
-    if (pressed_Up)
+    if (pressed_Up) {
         zoom += zoomSpeed * dt;
-    if (pressed_Down)
+        this->needsUpdate = true;
+    }
+    if (pressed_Down) {
         zoom -= zoomSpeed * dt;
+        this->needsUpdate = true;
+    }
     scale = pow(2, -zoom);
 
     //this->iterations = 128 * pow(8, zoom / 10);
@@ -206,11 +228,14 @@ void GLWidget::updateMomevent()
     iterationsChanged(this->iterations);
 
 
-    checkCudaErrors(cudaGLMapBufferObject((void**)&fractalData, buffer ), __LINE__, false);
+    if (this->needsUpdate) {
+        checkCudaErrors(cudaGLMapBufferObject((void**)&fractalData, buffer ), __LINE__, false);
 
-    compute(fractalData, imgWidth, imgHeight, iterations, midx, midy, scale, varx, vary, julia, this->renderType, this->colorSpectrum, this->colorSpectrumSize);
+        compute(fractalData, imgWidth, imgHeight, iterations, midx, midy, scale, varx, vary, julia, this->renderType, this->colorSpectrum, this->colorSpectrumSize);
 
-    checkCudaErrors(cudaGLUnmapBufferObject(buffer), __LINE__, false);
+        checkCudaErrors(cudaGLUnmapBufferObject(buffer), __LINE__, false);
+        this->needsUpdate = false;
+    }
 }
 
 void GLWidget::resizeGL(int w, int h) {
@@ -235,6 +260,7 @@ void GLWidget::resizeGL(int w, int h) {
 
     glBindTexture(GL_TEXTURE_2D, tex);
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, imgWidth, imgHeight, 0, GL_RGBA, GL_UNSIGNED_BYTE, 0);
+    this->needsUpdate = true;
 }
 
 void GLWidget::resizeEvent(QResizeEvent *) {
@@ -338,10 +364,12 @@ void GLWidget::keyPressEvent(QKeyEvent *event) {
     if (event->key() == Qt::Key_PageUp) {
         iterations *= 2;
         iterationsChanged(this->iterations);
+        this->needsUpdate = true;
     }
     if (event->key() == Qt::Key_PageDown && iterations >= 16) {
         iterations /= 2;
         iterationsChanged(this->iterations);
+        this->needsUpdate = true;
     }
 }
 
@@ -387,6 +415,7 @@ void GLWidget::mouseMoveEvent(QMouseEvent *event) {
         variableXChanged(varx);
         vary = midy - 2.0 * ay * scale * (double)(2.0 * event->y() - height()) / height();
         variableYChanged(vary);
+        this->needsUpdate = true;
     }
 }
 
@@ -395,17 +424,20 @@ void GLWidget::mouseMoveEvent(QMouseEvent *event) {
 
 void GLWidget::setJulia(bool julia) {
     this->julia = julia;
+    this->needsUpdate = true;
     //updateGL();
 }
 
 void GLWidget::setRenderType(RenderType type) {
     this->renderType = type;
+    this->needsUpdate = true;
     //updateGL();
 }
 
 void GLWidget::setMidPositionX(double x) {
     if (this->midx != x) {
         this->midx = x;
+        this->needsUpdate = true;
         //updateGL();
     }
 }
@@ -413,6 +445,7 @@ void GLWidget::setMidPositionX(double x) {
 void GLWidget::setMidPositionY(double y) {
     if (this->midy != y) {
         this->midy = y;
+        this->needsUpdate = true;
         //updateGL();
     }
 }
@@ -420,6 +453,7 @@ void GLWidget::setMidPositionY(double y) {
 void GLWidget::setVariableX(double x) {
     if (this->varx != x) {
         this->varx = x;
+        this->needsUpdate = true;
         //updateGL();
     }
 }
@@ -427,6 +461,7 @@ void GLWidget::setVariableX(double x) {
 void GLWidget::setVariableY(double y) {
     if (this->vary != y) {
         this->vary = y;
+        this->needsUpdate = true;
         //updateGL();
     }
 }
@@ -435,6 +470,7 @@ void GLWidget::setVariableY(double y) {
 void GLWidget::setZoom(double value) {
     if (this->zoom != value) {
         this->zoom = value;
+        this->needsUpdate = true;
         //updateGL();
     }
 }
@@ -442,6 +478,7 @@ void GLWidget::setZoom(double value) {
 void GLWidget::setIterations(int value) {
     if (this->iterations != value) {
         this->iterations = value;
+        this->needsUpdate = true;
         //updateGL();
     }
 }
@@ -470,6 +507,7 @@ void GLWidget::setColorSpectrum(QList<QColor> spectrum) {
         this->colorSpectrumSize = spectrum.size();
     }
 
+    this->needsUpdate = true;
     //updateGL();
 }
 

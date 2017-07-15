@@ -52,6 +52,7 @@ private:
     GLubyte* colorSpectrum;
     int colorSpectrumSize;
     QString errorString;
+    bool needsUpdate;
 
 public slots:
     void setJulia(bool);
