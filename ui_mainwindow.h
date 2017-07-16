@@ -30,6 +30,7 @@
 #include <QtWidgets/QStatusBar>
 #include <QtWidgets/QVBoxLayout>
 #include <QtWidgets/QWidget>
+#include <colorpicker.h>
 #include "colorspectrumpicker.h"
 #include "glwidget.h"
 
@@ -60,6 +61,7 @@ public:
     QDoubleSpinBox *variableXSpinBox;
     QDoubleSpinBox *variableYSpinBox;
     ColorSpectrumPicker *colorSpectrumPickerWidget;
+    ColorPicker *backColorPicker;
     QCheckBox *checkBox;
     QHBoxLayout *interationLayout;
     QLabel *label;
@@ -118,7 +120,7 @@ public:
         scrollArea->setWidgetResizable(true);
         scrollAreaWidgetContents = new QWidget();
         scrollAreaWidgetContents->setObjectName(QStringLiteral("scrollAreaWidgetContents"));
-        scrollAreaWidgetContents->setGeometry(QRect(0, 0, 318, 501));
+        scrollAreaWidgetContents->setGeometry(QRect(0, 0, 301, 504));
         verticalLayout_2 = new QVBoxLayout(scrollAreaWidgetContents);
         verticalLayout_2->setSpacing(6);
         verticalLayout_2->setContentsMargins(11, 11, 11, 11);
@@ -252,6 +254,18 @@ public:
 
         verticalLayout->addWidget(colorSpectrumPickerWidget);
 
+        backColorPicker = new ColorPicker(scrollAreaWidgetContents);
+        backColorPicker->setObjectName(QStringLiteral("backColorPicker"));
+        QSizePolicy sizePolicy4(QSizePolicy::Fixed, QSizePolicy::Fixed);
+        sizePolicy4.setHorizontalStretch(0);
+        sizePolicy4.setVerticalStretch(0);
+        sizePolicy4.setHeightForWidth(backColorPicker->sizePolicy().hasHeightForWidth());
+        backColorPicker->setSizePolicy(sizePolicy4);
+        backColorPicker->setMinimumSize(QSize(30, 20));
+        backColorPicker->setMaximumSize(QSize(16777215, 16777215));
+
+        verticalLayout->addWidget(backColorPicker);
+
         checkBox = new QCheckBox(scrollAreaWidgetContents);
         checkBox->setObjectName(QStringLiteral("checkBox"));
         sizePolicy3.setHeightForWidth(checkBox->sizePolicy().hasHeightForWidth());
@@ -305,11 +319,11 @@ public:
 
         renderTypeGroupBox = new QGroupBox(scrollAreaWidgetContents);
         renderTypeGroupBox->setObjectName(QStringLiteral("renderTypeGroupBox"));
-        QSizePolicy sizePolicy4(QSizePolicy::Preferred, QSizePolicy::Minimum);
-        sizePolicy4.setHorizontalStretch(0);
-        sizePolicy4.setVerticalStretch(0);
-        sizePolicy4.setHeightForWidth(renderTypeGroupBox->sizePolicy().hasHeightForWidth());
-        renderTypeGroupBox->setSizePolicy(sizePolicy4);
+        QSizePolicy sizePolicy5(QSizePolicy::Preferred, QSizePolicy::Minimum);
+        sizePolicy5.setHorizontalStretch(0);
+        sizePolicy5.setVerticalStretch(0);
+        sizePolicy5.setHeightForWidth(renderTypeGroupBox->sizePolicy().hasHeightForWidth());
+        renderTypeGroupBox->setSizePolicy(sizePolicy5);
         renderTypeGroupBox->setMinimumSize(QSize(0, 100));
         escapeRadioButton = new QRadioButton(renderTypeGroupBox);
         escapeRadioButton->setObjectName(QStringLiteral("escapeRadioButton"));

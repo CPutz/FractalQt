@@ -48,6 +48,8 @@ MainWindow::MainWindow(QWidget *parent) :
     //statusbar
     connect(ui->fractal, SIGNAL(sendStatusBarMessage(QString)), ui->statusBar, SLOT(showMessage(QString)));
 
+    //back color
+    connect(ui->backColorPicker, SIGNAL(colorChanged(QColor)), ui->fractal, SLOT(setBackColor(QColor)));
 
     //screenshot
     connect(ui->screenshotButton, SIGNAL(clicked()), this, SLOT(onScreenshot()));

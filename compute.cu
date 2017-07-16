@@ -1,4 +1,5 @@
 #include <GL/glut.h>
+#include <thrust/complex.h>
 
 //#include <cuda_runtime.h>
 //#include <cuda_gl_interop.h>
@@ -7,16 +8,20 @@
 
 #define PI 3.1415926535
 
+using namespace thrust;
+
 extern "C"
 void compute(GLubyte* data, const int width, const int height, const int iterations,
              const double midx, const double midy, const double scale,
              const double varx, const double vary, const bool julia,
-             RenderType type, GLubyte* colorSpectrum, const int colorSpectrumSize);
+             RenderType type, GLubyte* colorSpectrum, const int colorSpectrumSize,
+             const GLubyte backr, const GLubyte backg, const GLubyte backb);
 
 __global__ void computeEscape(GLubyte* data, const int imgWidth, const int imgHeight, const int iterations,
                               const double midx, const double midy, const double scale,
                               const double varx, const double vary, const bool julia,
-                              GLubyte* colorSpectrum, const int colorSpectrumSize)
+                              GLubyte* colorSpectrum, const int colorSpectrumSize,
+                              const GLubyte backr, const GLubyte backg, const GLubyte backb)
 {
     int index_x = blockIdx.x * blockDim.x + threadIdx.x;
     int index_y = blockIdx.y * blockDim.y + threadIdx.y;
@@ -33,7 +38,7 @@ __global__ void computeEscape(GLubyte* data, const int imgWidth, const int imgHe
     }
 
     if (index_x < imgWidth && index_y < imgHeight) {
-        double a, b, x, y, asq, bsq, rsq, e, atemp;
+        double a, b, x, y, asq, bsq, rsq, e, atemp, nor;
 
         a = midx + 2.0 * ax * scale * (double)(2.0 * index_x - imgWidth) / imgWidth;
         b = midy + 2.0 * ay * scale * (double)(2.0 * index_y - imgHeight) / imgHeight;
@@ -46,9 +51,26 @@ __global__ void computeEscape(GLubyte* data, const int imgWidth, const int imgHe
             y = b + vary;
         }
 
+        complex<double> z = complex<double>(a, b);
+        complex<double> c = complex<double>(x, y);
+
+        rsq = 4;
+        nor = norm(z);
+        int k = 0;
+
+        while (nor < rsq && k < iterations) {
+            //f(z) = z^2 + c (mandelbrot)
+            z = z*z + c;
+
+            e += expf(-nor);
+            ++k;
+            nor = norm(z);
+        }
+
+        /*
         asq = a * a;
         bsq = b * b;
-        rsq = 256;
+        rsq = 4;
         e = 0;
 
 
@@ -130,17 +152,26 @@ __global__ void computeEscape(GLubyte* data, const int imgWidth, const int imgHe
             asq = a * a;
             bsq = b * b;
             ++k;
-        }
+        }*/
 
         int j = 4 * i;
 
         if (k == iterations) {
-            data[j] = 0;
-            data[j + 1] = 0;
-            data[j + 2] = 0;
+            data[j] = backr;
+            data[j + 1] = backg;
+            data[j + 2] = backb;
             data[j + 3] = 255;
         } else {
             float hue = (0.025f * e - (int)(0.025f * e));
+
+            //float f = atan(z.imag()/z.real()) / PI + 0.5;
+            //float huetemp = hue + f;
+            //hue = huetemp - (int)huetemp;
+
+            //float f = norm(z);
+            //float huetemp = hue + f;
+            //hue = huetemp - (int)huetemp;
+
             int n = (int)(hue * (colorSpectrumSize - 1));
             float h = hue * (colorSpectrumSize - 1) - n;
 
@@ -288,7 +319,8 @@ __global__ void computeEscape(GLubyte* data, const int imgWidth, const int imgHe
 __global__ void computeNewton(GLubyte* data, const int imgWidth, const int imgHeight, const int iterations,
                               const double midx, const double midy, const double scale,
                               const double varx, const double vary, const bool julia,
-                              GLubyte* colorSpectrum, const int colorSpectrumSize)
+                              GLubyte* colorSpectrum, const int colorSpectrumSize,
+                              const GLubyte backr, const GLubyte backg, const GLubyte backb)
 {
     int index_x = blockIdx.x * blockDim.x + threadIdx.x;
     int index_y = blockIdx.y * blockDim.y + threadIdx.y;
@@ -305,7 +337,7 @@ __global__ void computeNewton(GLubyte* data, const int imgWidth, const int imgHe
     }
 
     if (index_x < imgWidth && index_y < imgHeight) {
-        double a, b, x, y, asq, bsq, epsilon, e, atemp, a1, b1, l;
+        double a, b, x, y, asq, bsq, epsilon, e, l;
 
         a = midx + 2.0 * ax * scale * (double)(2.0 * index_x - imgWidth) / imgWidth;
         b = midy + 2.0 * ay * scale * (double)(2.0 * index_y - imgHeight) / imgHeight;
@@ -318,80 +350,50 @@ __global__ void computeNewton(GLubyte* data, const int imgWidth, const int imgHe
             y = b + vary;
         }
 
-        asq = a * a;
-        bsq = b * b;
-        e = 0;
+        complex<double> z = complex<double>(a, b);
+        complex<double> c = complex<double>(x, y);
+        complex<double> z1;
 
+        e = 0;
         epsilon = 1E-5;
         l = 1;
-
         int k = 0;
 
         while (l > epsilon && k < iterations) {
-            //old values
-            a1 = a;
-            b1 = b;
+            //old value
+            z1 = z;
 
             //f(z) = z - (1+c)p(z) / p'(z)
             //p(z) = z^3 - 1
-            //double u1 = a * asq - 3 * a * bsq - 1;
-            //double v1 = 3 * asq * b - bsq * b;
-            //double u2 = asq - bsq;
-            //double v2 = 2 * a * b;
-            //double m = 3 * (u2 * u2 + v2 * v2);
-            //double u3 = (u1 * u2 + v1 * v2) / m;
-            //double v3 = (u2 * v1 - u1 * v2) / m;
-            //atemp = a - (1+x)*u3 + y*v3;
-            //b = b - (1+x)*v3 - y*u3;
-            //a = atemp;
+            //z = z - ((1.0+c) * (z*z*z - 1.0) / (3.0*z*z));
 
             //f(z) = z - (1+c)p(z) / p'(z)
             //p(z) = z^6 + z^3 - 1
-            double u1 = asq*asq*asq - 15*asq*asq*bsq + 15*asq*bsq*bsq - bsq*bsq*bsq + asq*a - 3*a*bsq - 1;
-            double v1 = 6*asq*asq*a*b - 20*asq*a*bsq*b + 6*a*bsq*bsq*b + 3*asq*b - bsq*b;
-            double u2 = 6*asq*asq*a - 60*asq*a*bsq + 30*a*bsq*bsq + 3*asq - 3*bsq;
-            double v2 = 30*asq*asq*b - 60*asq*bsq*b + 6*bsq*bsq*b + 6*a*b;
-            double m = u2 * u2 + v2 * v2;
-            double u3 = (u1 * u2 + v1 * v2) / m;
-            double v3 = (u2 * v1 - u1 * v2) / m;
-            atemp = a - (1+x)*u3 + y*v3;
-            b = b - (1+x)*v3 - y*u3;
-            a = atemp;
+            //z = z - ((1.0+c) * (z*z*z*z*z*z + z*z*z - 1.0) / (6.0*z*z*z*z*z + 3.0*z*z));
 
-            //f(z) = z^2 + c (mandelbrot)
-            //atemp = asq - bsq + x;
-            //b = a * b;
-            //b += b + y;
-            //a = atemp;
+            z = z - ((1.0+c) * sin(z) / cos(z));
 
-            //f(z) = 1/z^2 + c
-            //double m = asq + bsq;
-            //m *= m;
-            //atemp = (asq - bsq) / m + x;
-            //b = -(2 * a * b) / m + y;
-            //a = atemp;
-
-
-            l = (a-a1)*(a-a1)+(b-b1)*(b-b1);
-
+            l = norm(z - z1);
             e += expf(-1/l);
 
-            asq = a * a;
-            bsq = b * b;
             ++k;
         }
 
         int j = 4 * i;
 
         if (k == iterations) {
-            data[j] = 0;
-            data[j + 1] = 0;
-            data[j + 2] = 0;
+            data[j] = backr;
+            data[j + 1] = backg;
+            data[j + 2] = backb;
             data[j + 3] = 255;
         } else {
             float hue = (0.025f * e - (int)(0.025f * e));
 
-            float f = atan(b/a) / PI + 0.5;
+            //float f = atan(z.imag()/z.real()) / PI + 0.5;
+            //float huetemp = hue + f;
+            //hue = huetemp - (int)huetemp;
+
+            float f = norm(z);
             float huetemp = hue + f;
             hue = huetemp - (int)huetemp;
 
@@ -417,6 +419,9 @@ __global__ void computeNewton(GLubyte* data, const int imgWidth, const int imgHe
         }
     }
 }
+
+
+__global__
 
 
 
@@ -653,12 +658,6 @@ __global__ void computeAverage(GLubyte* data, const int imgWidth, const int imgH
             hue = 1.0f * mix - (int)(1.0f * mix) + 1;
         }
 
-        //colour scheme
-        //GLubyte colorArray[] = { 0, 0, 0, 255, 0, 0, 255, 155, 0, 255, 255, 255, 0, 0, 0 };
-        //int length = 5;
-        //GLubyte colorArray[] = { 0, 0, 0, 255, 100, 50, 0, 0, 0, 0, 100, 200, 50, 150, 255, 0, 0, 0 };
-        //int length = 6;
-
         int n = (int)(hue * (colorSpectrumSize - 1));
         float h = hue * (colorSpectrumSize - 1) - n;
 
@@ -685,7 +684,8 @@ __global__ void computeAverage(GLubyte* data, const int imgWidth, const int imgH
 void compute(GLubyte* data, const int width, const int height, const int iterations,
              const double midx, const double midy, const double scale,
              const double varx, const double vary, const bool julia,
-             RenderType renderType, GLubyte* colorSpectrum, const int colorSpectrumSize)
+             RenderType renderType, GLubyte* colorSpectrum, const int colorSpectrumSize,
+             const GLubyte backr, const GLubyte backg, const GLubyte backb)
 {
     dim3 blockSize;
     blockSize.x = 16;
@@ -697,7 +697,7 @@ void compute(GLubyte* data, const int width, const int height, const int iterati
 
     switch (renderType) {
         case Esc:
-            computeEscape <<< gridSize, blockSize >>> (data, width, height, iterations, midx, midy, scale, varx, vary, julia, colorSpectrum, colorSpectrumSize);
+            computeEscape <<< gridSize, blockSize >>> (data, width, height, iterations, midx, midy, scale, varx, vary, julia, colorSpectrum, colorSpectrumSize, backr, backg, backb);
             break;
         case Orbit:
             computeOrbit <<< gridSize, blockSize >>> (data, width, height, iterations, midx, midy, scale, 0, 0, julia, varx, vary, colorSpectrum, colorSpectrumSize);
@@ -706,7 +706,7 @@ void compute(GLubyte* data, const int width, const int height, const int iterati
             computeAverage <<< gridSize, blockSize >>> (data, width, height, iterations, midx, midy, scale, varx, vary, julia, colorSpectrum, colorSpectrumSize);
             break;
         case Newton:
-            computeNewton <<< gridSize, blockSize >>> (data, width, height, iterations, midx, midy, scale, varx, vary, julia, colorSpectrum, colorSpectrumSize);
+            computeNewton <<< gridSize, blockSize >>> (data, width, height, iterations, midx, midy, scale, varx, vary, julia, colorSpectrum, colorSpectrumSize, backr, backg, backb);
             break;
     }
 }

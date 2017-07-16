@@ -53,6 +53,7 @@ private:
     int colorSpectrumSize;
     QString errorString;
     bool needsUpdate;
+    QColor backColor;
 
 public slots:
     void setJulia(bool);
@@ -67,6 +68,7 @@ public slots:
     void setSamplingFactor(double);
     void updateFPS();
     void takeScreenShot(std::string);
+    void setBackColor(QColor);
 
 signals:
     void sendStatusBarMessage(QString);

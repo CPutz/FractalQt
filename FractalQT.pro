@@ -21,7 +21,8 @@ SOURCES += main.cpp\
     cuda_helper.cpp \
     colorspectrumpicker.cpp \
     colorspectrumchannelpicker.cpp \
-    gradient.cpp
+    gradient.cpp \
+    colorpicker.cpp
 
 HEADERS  += mainwindow.h \
     glwidget.h \
@@ -29,7 +30,8 @@ HEADERS  += mainwindow.h \
     fractal.h \
     colorspectrumpicker.h \
     colorspectrumchannelpicker.h \
-    gradient.h
+    gradient.h \
+    colorpicker.h
 
 CUDA_SOURCES += compute.cu
 

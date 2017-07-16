@@ -15,6 +15,10 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <iostream>
+
+using namespace std;
+
 
 int imgWidth;
 int imgHeight;
@@ -45,7 +49,8 @@ extern "C"
 void compute(GLubyte* data, const int width, const int height, const int iterations,
              const double midx, const double midy, const double scale,
              const double varx, const double vary, const bool julia,
-             RenderType type, GLubyte* colorSpectrum, const int colorSpectrumSize);
+             RenderType type, GLubyte* colorSpectrum, const int colorSpectrumSize,
+             const GLubyte backr, const GLubyte backg, const GLubyte backb);
 
 
 GLWidget::GLWidget(QWidget *parent) : QGLWidget(parent) {
@@ -228,7 +233,7 @@ void GLWidget::updateMomevent()
     if (this->needsUpdate) {
         checkCudaErrors(cudaGLMapBufferObject((void**)&fractalData, buffer ), __LINE__, false);
 
-        compute(fractalData, imgWidth, imgHeight, iterations, midx, midy, scale, varx, vary, julia, this->renderType, this->colorSpectrum, this->colorSpectrumSize);
+        compute(fractalData, imgWidth, imgHeight, iterations, midx, midy, scale, varx, vary, julia, this->renderType, this->colorSpectrum, this->colorSpectrumSize, backColor.red(), backColor.green(), backColor.blue());
 
         checkCudaErrors(cudaGLUnmapBufferObject(buffer), __LINE__, false);
         this->needsUpdate = false;
@@ -312,7 +317,7 @@ void GLWidget::setCudaDevice() {
     for (int i = 0; i < numDevices; ++i) {
         //Get the device properties
         cudaDeviceProp properties;
-        checkCudaErrors(cudaGetDeviceProperties(&properties, i), __LINE__, false);
+        checkCudaErrors(cudaGetDeviceProperties(&properties, i), __LINE__, true);
 
         //Test for the most multiprocessors
         if (max < properties.multiProcessorCount) {
@@ -326,9 +331,9 @@ void GLWidget::setCudaDevice() {
 
         cudaDeviceProp devProp;
         checkCudaErrors(cudaGetDeviceProperties(&devProp, bestDevice), __LINE__, false);
-        //cout << "Using device: " << devProp.name << endl;
+        cout << "Using device: " << devProp.name << endl;
     } else {
-        //cout << "No CUDA device found." << endl;
+        cout << "No CUDA device found." << endl;
         exit( -1 );
     }
 }
@@ -506,6 +511,11 @@ void GLWidget::setColorSpectrum(QList<QColor> spectrum) {
 
     this->needsUpdate = true;
     //updateGL();
+}
+
+void GLWidget::setBackColor(QColor color) {
+    this->backColor = color;
+    this->needsUpdate = true;
 }
 
 void GLWidget::updateStatusBar() {
